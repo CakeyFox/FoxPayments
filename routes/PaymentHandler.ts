@@ -43,12 +43,17 @@ router.get("/checkout/mercadopago", async (req, res) => {
     }
     mercadoPago.createPayment({
         id: itemInfo.itemId,
-        title: itemInfo.itemName,
+        title: itemInfo.itemName + ` - ${checkoutInfo.userId}`,
         price: itemInfo.price,
         userId: checkoutInfo.userId,
     }).then((url) => {
         res.redirect(url);
     });
+});
+
+router.post("/mercadopago/webhook", async (req, res) => {
+    console.log(req.body);
+    res.status(200).send("OK");
 });
 
 router.get("/cancel", async (req, res) => {

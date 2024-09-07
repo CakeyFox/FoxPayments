@@ -28,6 +28,7 @@ export default class MercadoPagoClient {
                         unit_price: data.price,
                         quantity: 1,
                         currency_id: "BRL",
+                        description: "Premium",
                     }
                 ],
                 external_reference: data.userId,
