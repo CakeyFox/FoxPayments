@@ -148,7 +148,7 @@
 
         <div class="button-container">
             <a href="/cancel?id=<%= item.checkoutId %>"><button class="danger">Cancelar compra</button></a>
-            <a href="/checkout/mercadopago?itemId=<%= item.id %>&userId=<%= userId %>"><button class="success">Continuar a compra</button></a>
+            <a href="/checkout/mercadopago?checkoutId=<%= item.checkoutId %>"><button class="success">Continuar a compra</button></a>
         </div>
 
         <p>Escolheu o produto errado? Clique em "Cancelar compra" antes de escolher outro produto!</p>
