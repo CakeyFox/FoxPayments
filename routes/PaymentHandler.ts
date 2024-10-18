@@ -1,6 +1,12 @@
 import { Router } from "express";
 import { database, mercadoPago } from "..";
+import OrderHandler from "../services/foxy/OrderHandler";
+import { MercadoPagoOrder } from "../utils/types/order";
+import { MercadoPagoEvents } from "../utils/types/mercadopago";
+import { logger } from "../utils/logger";
+
 const router = Router();
+const orderHandler = new OrderHandler();
 
 router.get('/checkout/id/:checkoutId', async (req, res) => {
     const { checkoutId } = req.params;
@@ -44,7 +50,7 @@ router.get("/checkout/mercadopago", async (req, res) => {
     mercadoPago.createPayment({
         id: itemInfo.itemId,
         title: itemInfo.itemName + ` - ${checkoutInfo.userId}`,
-        price: itemInfo.price,
+        price: 1,
         userId: checkoutInfo.userId,
     }).then((url) => {
         res.redirect(url);
@@ -52,8 +58,22 @@ router.get("/checkout/mercadopago", async (req, res) => {
 });
 
 router.post("/mercadopago/webhook", async (req, res) => {
-    console.log(req.body);
-    res.status(200).send("OK");
+    const body = req.body as MercadoPagoOrder;
+    
+    switch (body.action) {
+        case MercadoPagoEvents.MERCADOPAGO_PAYMENT_UPDATED: {
+            try {
+                const payment = await mercadoPago.getPayment(body.data.id);
+                if (payment.status === "approved") {
+                    orderHandler.createOrder(body);
+                }
+                break;
+            } catch (err) {
+                logger.error(err);
+                return res.status(500).send("Internal server error");
+            }
+        }
+    }
 });
 
 router.get("/cancel", async (req, res) => {

@@ -49,6 +49,5 @@ export default class MercadoPagoClient {
 
     public async getPayment(paymentId: string) {
         return this.payment.get({ id: paymentId });
-        
     }
 }
