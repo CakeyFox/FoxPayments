@@ -59,7 +59,6 @@ router.get("/checkout/mercadopago", async (req, res) => {
 
 router.post("/mercadopago/webhook", async (req, res) => {
     const body = req.body as MercadoPagoOrder;
-    
     switch (body.action) {
         case MercadoPagoEvents.MERCADOPAGO_PAYMENT_UPDATED: {
             try {
@@ -80,7 +79,5 @@ router.get("/cancel", async (req, res) => {
     await database.deleteCheckout(req.query.id);
     res.redirect("https://foxybot.win/");
 });
-
-// TODO
 
 module.exports = router;
