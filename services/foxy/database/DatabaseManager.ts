@@ -118,6 +118,11 @@ export default class DatabaseConnection {
         let document = await this.checkoutList.findOne({ checkoutId: checkoutId });
         return document;
     }
+    
+    async getCheckoutByUserId(userId: string): Promise<any> {
+        let document = await this.checkoutList.findOne({ userId: userId });
+        return document;
+    }
 
     async deleteCheckout(checkoutId: string) {
         const document = await this.checkoutList.findOne({ checkoutId: checkoutId });
