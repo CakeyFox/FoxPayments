@@ -37,6 +37,11 @@ router.get('/checkout/id/:checkoutId', async (req, res) => {
 
 });
 
+router.get("/pending", async (req, res) => {
+    const { collection_id, collection_status, external_reference, payment_type, preference_id, site_id, processing_mode, merchant_account_id } = req.query;
+    
+});
+
 router.get("/checkout/mercadopago", async (req, res) => {
     const { checkoutId } = req.query;
     if (!checkoutId) {
@@ -57,15 +62,30 @@ router.get("/checkout/mercadopago", async (req, res) => {
     });
 });
 
+let lastProcessedPaymentId = null;
+let lastProcessedDate = null;
+
 router.post("/mercadopago/webhook", async (req, res) => {
     const body = req.body as MercadoPagoOrder;
     switch (body.action) {
         case MercadoPagoEvents.MERCADOPAGO_PAYMENT_UPDATED: {
+            const paymentId = body.data.id;
+            const paymentDate = new Date(body.date_created);
+
+            if (paymentId === lastProcessedPaymentId && paymentDate <= lastProcessedDate) {
+                logger.warn(`Ignoring duplicate event for payment ${paymentId}`);
+                return res.status(200).send("Duplicate event ignored");
+            }
+
             try {
-                const payment = await mercadoPago.getPayment(body.data.id);
+                const payment = await mercadoPago.getPayment(paymentId);
+                logger.info(`Received payment update by ${payment.external_reference} for payment ${payment.id} with status ${payment.status} with product ${payment.additional_info.items[0].id}`);
                 if (payment.status === "approved") {
-                    orderHandler.createOrder(body);
+                    orderHandler.createOrder(body, payment.external_reference, payment.additional_info.items[0].id);
                 }
+
+                lastProcessedPaymentId = paymentId;
+                lastProcessedDate = paymentDate;
                 break;
             } catch (err) {
                 logger.error(err);
@@ -73,7 +93,9 @@ router.post("/mercadopago/webhook", async (req, res) => {
             }
         }
     }
+    res.status(200).send("OK");
 });
+
 
 router.get("/cancel", async (req, res) => {
     await database.deleteCheckout(req.query.id);
