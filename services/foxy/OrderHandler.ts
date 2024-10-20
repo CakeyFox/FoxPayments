@@ -37,7 +37,7 @@ export default class OrderHandler {
     private createEmbed(itemName: string, checkoutId: string): Embed {
         return {
             title: "Obrigada por me ajudar a ficar online, yay!",
-            description: `Muito obrigada por comprar **${itemName}**! Você não sabe o quanto isso me ajuda (a comprar comida) e me manter online, você é incrível! :purlple_heart:`,
+            description: `Muito obrigada por comprar **${itemName}**! Você não sabe o quanto isso me ajuda (a comprar comida) e me manter online, você é incrível! :purple_heart:`,
             color: 0xe7385d,
             footer: { text: `A referência do seu pedido é ${checkoutId}` },
             thumbnail: { url: "https://cdn.discordapp.com/emojis/853366914054881310.png?v=1" },

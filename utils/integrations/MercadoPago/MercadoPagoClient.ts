@@ -33,7 +33,7 @@ export default class MercadoPagoClient {
                 ],
                 external_reference: data.userId,
                 back_urls: {
-                    success: `${process.env.BASE_URL}/success`,
+                    success: `${process.env.BASE_URL}/br/dashboard/subscriptions`,
                     failure: `${process.env.BASE_URL}/failure`,
                     pending: `${process.env.BASE_URL}/pending`,
                 },

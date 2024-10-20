@@ -98,6 +98,14 @@ router.post("/mercadopago/webhook", async (req, res) => {
     }
 });
 
+router.get("/pending", (req, res) => {
+    res.send("Payment pending");
+});
+
+router.get("/failure", (req, res) => {
+    res.send("Payment failed");
+});
+
 router.get("/cancel", async (req, res) => {
     try {
         await database.deleteCheckout(req.query.id as string);
