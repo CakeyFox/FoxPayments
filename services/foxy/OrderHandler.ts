@@ -1,5 +1,5 @@
+import { Embed } from "discordeno/*";
 import { database } from "../..";
-import { MercadoPagoOrder } from "../../utils/types/order";
 import { RestManager } from "./RestManager";
 
 export default class OrderHandler {
@@ -9,10 +9,14 @@ export default class OrderHandler {
         this.rest = new RestManager();
     }
 
-    async createOrder(order: MercadoPagoOrder, userId: string, itemId: string) {
+    async createSubscriptionOrder(userId: string, itemId: string) {
         const itemInfo = await database.getProductFromStore(itemId);
-        const checkoutInfo = await database.getCheckoutByUserId(userId);
-        
+        const userInfo = await database.getUser(userId);
+        userInfo.userPremium.premium = true;
+        userInfo.userPremium.premiumDate = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);
+        userInfo.userPremium.premiumType = itemInfo.itemId;
+        await userInfo.save();
+
         const embed = {
             title: "Obrigada por me ajudar a ficar online, yay!",
             description: `Muito obrigada por comprar o **${itemInfo.itemName}**! Você não sabe o quanto isso me ajuda (a comprar comida) e me manter online, você é incrível! 💜`,
@@ -25,6 +29,30 @@ export default class OrderHandler {
             }
         };
 
+        this.sendMessage(embed, userId);
+    }
+
+    async createCakesOrder(userId: string, itemId: string) {
+        const itemInfo = await database.getProductFromStore(itemId);
+        const userInfo = await database.getUser(userId);
+
+        const embed = {
+            title: "Obrigada por me ajudar a ficar online, yay!",
+            description: `Muito obrigada por comprar **${itemInfo.quantity} Cakes! Você não sabe o quanto isso me ajuda (a comprar comida) e me manter online, você é incrível! 💜`,
+            color: 0xe7385d,
+            footer: {
+                text: "Obrigada por me ajudar a ficar online!"
+            }
+        };
+
+        userInfo.userCakes.balance += itemInfo.quantity;
+        await database.createTransaction(userId, itemInfo.quantity);
+        await userInfo.save();
+
+        this.sendMessage(embed, userId);
+    }
+
+    sendMessage(embed: Embed, userId: string) {
         this.rest.sendDirectMessage(userId, {
             embeds: [embed]
         });

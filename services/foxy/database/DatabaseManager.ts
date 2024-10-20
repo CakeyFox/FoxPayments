@@ -5,6 +5,7 @@ import { RestManager } from '../RestManager';
 import { Schemas } from './Schemas';
 import { Background, Decoration, Layout } from '../../../utils/types/profile';
 import { Item } from '../../../utils/types/item';
+import { TransactionType } from '../../../utils/types/transactions';
 const { v4: uuidv4 } = require('uuid');
 const rest = new RestManager();
 
@@ -112,6 +113,20 @@ export default class DatabaseConnection {
     async getProductFromStore(productId: string): Promise<Item> {
         let document = await this.items.findOne({ itemId: productId });
         return document;
+    }
+
+    async createTransaction(userId: string, quantity: number): Promise<void> {
+        const user = await this.getUser(userId);
+        user.userTransactions.push({
+            to: userId,
+            from: process.env.APPLICATION_ID,
+            quantity: quantity,
+            date: new Date(),
+            received: true,
+            type: TransactionType.BOUGHT_CAKES
+        });
+
+        await user.save();
     }
 
     async getCheckout(checkoutId: string): Promise<any> {

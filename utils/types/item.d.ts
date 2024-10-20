@@ -3,5 +3,6 @@ export interface Item {
     itemName: string,
     price: number,
     description: string,
-    isSubscription: boolean
+    isSubscription: boolean,
+    quantity?: number,
 }

@@ -158,6 +158,7 @@ const storeSchema = new mongoose.Schema({
     price: Number,
     description: String,
     isSubscription: Boolean,
+    quantity: Number,
 });
 
 const checkoutList = new mongoose.Schema({
@@ -165,6 +166,7 @@ const checkoutList = new mongoose.Schema({
     userId: String,
     itemId: String,
     date: Date,
+    isApproved: Boolean,
 });
 
 const commandsSchema = new mongoose.Schema({
