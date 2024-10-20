@@ -73,6 +73,7 @@ router.post("/mercadopago/webhook", async (req, res) => {
 
             switch (payment.status) {
                 case MercadoPagoStatus.PAYMENT_APPROVED: {
+                    if (checkoutInfo.isApproved) return res.status(409).send("Payment already approved");
                     checkoutInfo.paymentId = payment.id;
                     checkoutInfo.isApproved = true;
                     await checkoutInfo.save();
