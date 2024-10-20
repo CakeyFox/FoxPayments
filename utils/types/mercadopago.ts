@@ -1,4 +1,8 @@
 export enum MercadoPagoEvents {
-    MERCADOPAGO_PAYMENT_UPDATED = "payment.updated",
-    MERCADOPAGO_ORDER_CREATED = "order.created",
+    PAYMENT_UPDATED = "payment.updated",
+    ORDER_CREATED = "order.created",
+}
+
+export enum MercadoPagoStatus {
+    PAYMENT_APPROVED = "approved",
 }
