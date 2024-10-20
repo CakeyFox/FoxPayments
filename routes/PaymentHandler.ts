@@ -2,7 +2,7 @@ import { Router } from "express";
 import { database, mercadoPago } from "..";
 import OrderHandler from "../services/foxy/OrderHandler";
 import { MercadoPagoOrder } from "../utils/types/order";
-import { MercadoPagoEvents } from "../utils/types/mercadopago";
+import { MercadoPagoEvents, MercadoPagoStatus } from "../utils/types/mercadopago";
 import { logger } from "../utils/logger";
 
 const router = Router();
@@ -39,7 +39,7 @@ router.get('/checkout/id/:checkoutId', async (req, res) => {
 
 router.get("/pending", async (req, res) => {
     const { collection_id, collection_status, external_reference, payment_type, preference_id, site_id, processing_mode, merchant_account_id } = req.query;
-    
+
 });
 
 router.get("/checkout/mercadopago", async (req, res) => {
@@ -62,31 +62,35 @@ router.get("/checkout/mercadopago", async (req, res) => {
     });
 });
 
-let lastProcessedPaymentId = null;
-let lastProcessedDate = null;
-
 router.post("/mercadopago/webhook", async (req, res) => {
     const body = req.body as MercadoPagoOrder;
     switch (body.action) {
-        case MercadoPagoEvents.MERCADOPAGO_PAYMENT_UPDATED: {
+        case MercadoPagoEvents.PAYMENT_UPDATED: {
             const paymentId = body.data.id;
-            const paymentDate = new Date(body.date_created);
-
-            if (paymentId === lastProcessedPaymentId && paymentDate <= lastProcessedDate) {
-                logger.warn(`Ignoring duplicate event for payment ${paymentId}`);
-                return res.status(200).send("Duplicate event ignored");
-            }
 
             try {
                 const payment = await mercadoPago.getPayment(paymentId);
+                const itemInfo = await database.getProductFromStore(payment.additional_info.items[0].id);
                 logger.info(`Received payment update by ${payment.external_reference} for payment ${payment.id} with status ${payment.status} with product ${payment.additional_info.items[0].id}`);
-                if (payment.status === "approved") {
-                    orderHandler.createOrder(body, payment.external_reference, payment.additional_info.items[0].id);
-                }
 
-                lastProcessedPaymentId = paymentId;
-                lastProcessedDate = paymentDate;
-                break;
+                if (payment.status === MercadoPagoStatus.PAYMENT_APPROVED) {
+                    switch (itemInfo.isSubscription) {
+                        case true: {
+                            orderHandler.createSubscriptionOrder(
+                                payment.external_reference,
+                                payment.additional_info.items[0].id
+                            );
+                            break;
+                        }
+
+                        case false: {
+                            orderHandler.createCakesOrder(
+                                payment.external_reference,
+                                payment.additional_info.items[0].id
+                            );
+                        }
+                    }
+                }
             } catch (err) {
                 logger.error(err);
                 return res.status(500).send("Internal server error");
