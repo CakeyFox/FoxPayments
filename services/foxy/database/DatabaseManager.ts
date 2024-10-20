@@ -135,7 +135,7 @@ export default class DatabaseConnection {
     }
     
     async getCheckoutByUserId(userId: string): Promise<any> {
-        let document = await this.checkoutList.findOne({ userId: userId });
+        let document = await this.checkoutList.findOne({ userId: userId, isApproved: false });
         return document;
     }
 
