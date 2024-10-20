@@ -167,6 +167,7 @@ const checkoutList = new mongoose.Schema({
     itemId: String,
     date: Date,
     isApproved: Boolean,
+    paymentId: String,
 });
 
 const commandsSchema = new mongoose.Schema({

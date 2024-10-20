@@ -13,14 +13,11 @@ router.get('/checkout/id/:checkoutId', async (req, res) => {
 
     try {
         const checkoutInfo = await database.getCheckout(checkoutId);
-        if (!checkoutInfo) {
-            return res.status(404).json({ message: "Checkout not found" });
-        }
-        const itemInfo = await database.getProductFromStore(checkoutInfo.itemId);
+        if (!checkoutInfo) return res.status(404).json({ message: "Checkout not found" });
 
-        if (!itemInfo) {
-            return res.status(404).json({ message: "Item not found" });
-        }
+        const itemInfo = await database.getProductFromStore(checkoutInfo.itemId);
+        if (!itemInfo) return res.status(404).json({ message: "Item not found" });
+
         res.render("../public/pages/checkout.ejs", {
             item: {
                 checkoutId: checkoutInfo.checkoutId,
@@ -32,78 +29,83 @@ router.get('/checkout/id/:checkoutId', async (req, res) => {
             userId: checkoutInfo.userId,
         });
     } catch (error) {
-        console.log("Error: ", error);
+        logger.error("Error fetching checkout:", error);
+        res.status(500).json({ message: "Internal server error" });
     }
-
-});
-
-router.get("/pending", async (req, res) => {
-    const { collection_id, collection_status, external_reference, payment_type, preference_id, site_id, processing_mode, merchant_account_id } = req.query;
-
 });
 
 router.get("/checkout/mercadopago", async (req, res) => {
     const { checkoutId } = req.query;
-    if (!checkoutId) {
-        return res.status(400).json({ message: "Missing parameters" });
+    if (!checkoutId) return res.status(400).json({ message: "Missing parameters" });
+
+    try {
+        const checkoutInfo = await database.getCheckout(checkoutId);
+        const itemInfo = await database.getProductFromStore(checkoutInfo.itemId);
+
+        if (!checkoutInfo || !itemInfo) return res.status(404).json({ message: "Checkout not found" });
+
+        const paymentUrl = await mercadoPago.createPayment({
+            id: itemInfo.itemId,
+            title: `${itemInfo.itemName} - ${checkoutInfo.userId}`,
+            price: 1,
+            userId: checkoutInfo.userId,
+        });
+
+        res.redirect(paymentUrl);
+    } catch (error) {
+        logger.error("Error creating payment:", error);
+        res.status(500).json({ message: "Internal server error" });
     }
-    const checkoutInfo = await database.getCheckout(checkoutId);
-    const itemInfo = await database.getProductFromStore(checkoutInfo.itemId);
-    if (!checkoutInfo || !itemInfo) {
-        return res.status(404).json({ message: "Checkout not found" });
-    }
-    mercadoPago.createPayment({
-        id: itemInfo.itemId,
-        title: itemInfo.itemName + ` - ${checkoutInfo.userId}`,
-        price: 1,
-        userId: checkoutInfo.userId,
-    }).then((url) => {
-        res.redirect(url);
-    });
 });
 
 router.post("/mercadopago/webhook", async (req, res) => {
     const body = req.body as MercadoPagoOrder;
-    switch (body.action) {
-        case MercadoPagoEvents.PAYMENT_UPDATED: {
+
+    try {
+        if (body.action === MercadoPagoEvents.PAYMENT_UPDATED) {
             const paymentId = body.data.id;
+            const payment = await mercadoPago.getPayment(paymentId);
 
-            try {
-                const payment = await mercadoPago.getPayment(paymentId);
-                const itemInfo = await database.getProductFromStore(payment.additional_info.items[0].id);
-                logger.info(`Received payment update by ${payment.external_reference} for payment ${payment.id} with status ${payment.status} with product ${payment.additional_info.items[0].id}`);
+            const itemInfo = await database.getProductFromStore(payment.additional_info.items[0].id);
+            const checkoutInfo = await database.getCheckoutByUserId(payment.external_reference);
 
-                if (payment.status === MercadoPagoStatus.PAYMENT_APPROVED) {
-                    switch (itemInfo.isSubscription) {
-                        case true: {
-                            orderHandler.createSubscriptionOrder(
-                                payment.external_reference,
-                                payment.additional_info.items[0].id
-                            );
-                            break;
-                        }
+            logger.info(`Payment update: ${payment.id} - Status: ${payment.status}`);
 
-                        case false: {
-                            orderHandler.createCakesOrder(
-                                payment.external_reference,
-                                payment.additional_info.items[0].id
-                            );
-                        }
-                    }
+            if (payment.status === MercadoPagoStatus.PAYMENT_APPROVED) {
+                checkoutInfo.paymentId = payment.id;
+                checkoutInfo.isApproved = true;
+                await checkoutInfo.save();
+
+                if (itemInfo.isSubscription) {
+                    await orderHandler.createSubscriptionOrder(
+                        payment.external_reference,
+                        payment.additional_info.items[0].id,
+                        checkoutInfo.checkoutId
+                    );
+                } else {
+                    await orderHandler.createCakesOrder(
+                        payment.external_reference,
+                        payment.additional_info.items[0].id,
+                        checkoutInfo.checkoutId
+                    );
                 }
-            } catch (err) {
-                logger.error(err);
-                return res.status(500).send("Internal server error");
             }
         }
+        res.status(200).send("OK");
+    } catch (error) {
+        logger.error("Webhook error:", error);
+        res.status(500).send("Internal server error");
     }
-    res.status(200).send("OK");
 });
 
-
 router.get("/cancel", async (req, res) => {
-    await database.deleteCheckout(req.query.id);
-    res.redirect("https://foxybot.win/");
+    try {
+        await database.deleteCheckout(req.query.id as string);
+        res.redirect("https://foxybot.win/");
+    } catch (error) {
+        logger.error("Error cancelling checkout:", error);
+        res.status(500).json({ message: "Internal server error" });
+    }
 });
 
 module.exports = router;
