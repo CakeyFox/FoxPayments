@@ -47,7 +47,7 @@ router.get("/checkout/mercadopago", async (req, res) => {
         const paymentUrl = await mercadoPago.createPayment({
             id: itemInfo.itemId,
             title: `${itemInfo.itemName} - ${checkoutInfo.userId}`,
-            price: 1,
+            price: itemInfo.price,
             userId: checkoutInfo.userId,
         });
 
@@ -71,23 +71,33 @@ router.post("/mercadopago/webhook", async (req, res) => {
 
             logger.info(`Payment update: ${payment.id} - Status: ${payment.status}`);
 
-            if (payment.status === MercadoPagoStatus.PAYMENT_APPROVED) {
-                checkoutInfo.paymentId = payment.id;
-                checkoutInfo.isApproved = true;
-                await checkoutInfo.save();
+            switch (payment.status) {
+                case MercadoPagoStatus.PAYMENT_APPROVED: {
+                    checkoutInfo.paymentId = payment.id;
+                    checkoutInfo.isApproved = true;
+                    await checkoutInfo.save();
+    
+                    if (itemInfo.isSubscription) {
+                        await orderHandler.createSubscriptionOrder(
+                            payment.external_reference,
+                            payment.additional_info.items[0].id,
+                            checkoutInfo.checkoutId
+                        );
+                    } else {
+                        await orderHandler.createCakesOrder(
+                            payment.external_reference,
+                            payment.additional_info.items[0].id,
+                            checkoutInfo.checkoutId
+                        );
+                    }
+                }
 
-                if (itemInfo.isSubscription) {
-                    await orderHandler.createSubscriptionOrder(
+                case MercadoPagoStatus.PAYMENT_REFUNDED: {
+                    orderHandler.createRefundOrder(
                         payment.external_reference,
                         payment.additional_info.items[0].id,
                         checkoutInfo.checkoutId
-                    );
-                } else {
-                    await orderHandler.createCakesOrder(
-                        payment.external_reference,
-                        payment.additional_info.items[0].id,
-                        checkoutInfo.checkoutId
-                    );
+                    )
                 }
             }
         }

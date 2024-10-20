@@ -10,4 +10,5 @@ export enum TransactionType {
     ROULETTE = "roulette",
     BET = "bet",
     RUSSIAN_ROULETTE_REWARD = "russianRouletteReward",
+    REFUND = "refund",
 }

@@ -5,4 +5,5 @@ export enum MercadoPagoEvents {
 
 export enum MercadoPagoStatus {
     PAYMENT_APPROVED = "approved",
+    PAYMENT_REFUNDED = "refunded",
 }

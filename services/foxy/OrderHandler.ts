@@ -1,6 +1,7 @@
 import { Embed } from "discordeno/*";
 import { database } from "../..";
 import { RestManager } from "./RestManager";
+import { TransactionType } from "../../utils/types/transactions";
 
 export default class OrderHandler {
     private rest: RestManager;
@@ -32,6 +33,18 @@ export default class OrderHandler {
         await userInfo.save();
 
         this.sendMessage(this.createEmbed(`${itemInfo.quantity} Cakes`, checkoutId), userId);
+    }
+
+    async createRefundOrder(userId: string, itemId: string, checkoutId: string) {
+        this.rest.sendDirectMessage(userId, {
+            embeds: [{
+                title: "Pedido de reembolso",
+                description: `Seu reembolso foi processado com sucesso! Não se preocupe, você ainda é incrível! :purple_heart:`,
+                color: 0xe7385d,
+                footer: { text: `A referência do seu pedido é ${checkoutId}` },
+                thumbnail: { url: "https://cdn.discordapp.com/emojis/853366914054881310.png?v=1" },
+            }],
+        });
     }
 
     private createEmbed(itemName: string, checkoutId: string): Embed {
