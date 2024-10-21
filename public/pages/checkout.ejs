@@ -4,155 +4,57 @@
 <head>
     <link rel="stylesheet" href="https://lotus.cakeyfox.live/styles/header.css" type="text/css">
     <script src="https://www.mercadopago.com/v2/security.js" view="home"></script>
+    <link rel="stylesheet" href="/styles/main.css" type="text/css">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>FoxPayments | Checkout</title>
-    <style>
-        .navigation-bar {
-            background-color: #7289da;
-        }
-
-        @media only screen and (max-width: 800px) {
-            nav.navigation-bar {
-                display: flex;
-            }
-        }
-
-        body {
-            font-family: Arial, sans-serif;
-            margin: 0;
-            padding: 0;
-            background-color: #f5f5f5;
-            color: #333;
-            line-height: 1.6;
-        }
-
-        main {
-            padding: 20px;
-            max-width: 800px;
-            margin: 0 auto;
-            background-color: #fff;
-            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-            border-radius: 8px;
-        }
-
-        h1.title {
-            font-size: 2em;
-            margin-bottom: 20px;
-            color: #4a90e2;
-        }
-
-        h1.title.mp {
-            font-size: 2em;
-            margin-bottom: 20px;
-            margin-top: -102px;
-            margin-left: 50%;
-            color: #4a90e2;
-        }
-
-        h3.description {
-            font-size: 1em;
-            margin-bottom: 10px;
-            margin-top: -15px;
-            color: #666;
-            display: flex;
-            align-items: center;
-        }
-
-        h2.description {
-            font-size: 1em;
-            margin-bottom: 10px;
-            margin-top: -130px;
-            margin-left: 55%;
-            color: #666;
-            display: flex;
-            align-items: center;
-        }
-
-        h3.price {
-            font-size: 1.5em;
-            margin-bottom: 20px;
-            margin-top: -20px;
-            color: #333;
-        }
-        
-        h4.description {
-            font-size: 1em;
-            margin-bottom: 10px;
-            margin-top: 60px;
-            color: #666;
-        }
-
-        .description img {
-            height: 5em;
-            margin-left: 10px;
-        }
-
-        .button-container {
-            display: flex;
-            justify-content: space-between;
-            margin-top: 20px;
-        }
-
-        .button-container a {
-            text-decoration: none;
-        }
-
-        .button-container .danger,
-        .button-container .success {
-            padding: 10px 20px;
-            font-size: 1em;
-            color: #fff;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-            text-align: center;
-        }
-
-        .button-container .danger {
-            background-color: #e74c3c;
-        }
-
-        .button-container .success {
-            background-color: #2ecc71;
-        }
-
-        p {
-            margin-top: 20px;
-            color: #666;
-            text-align: center;
-        }
-        
-    </style>
 </head>
 
 <body>
     <header>
-        <nav class="navigation-bar fixed" data-preload-persist="true" id="navigation-bar">
+        <nav class="navigation-bar fixed" id="navigation-bar" data-preload-persist="true">
             <div class="left-entries">
-                <div class="entry foxy-navbar-logo">
-                    <a href="https://cakeyfox.live">
-                        <img src="https://cakeyfox.live/images/logo.png"
-                            style="width: 150px; height: 90px; position: absolute; top: -23px; left: -90px;">
-                    </a>
-                </div>
+                <a href="https://cakeyfox.live" class="foxy-navbar-logo">
+                    <img src="https://cakeyfox.live/images/logo.png" 
+                         alt="Foxy Logo" class="logo">
+                </a>
             </div>
         </nav>
     </header>
+
     <main>
         <h1 class="title"><%= item.name %></h1>
         <h3 class="price"><%= item.price %> BRL</h3>
         <h3 class="description"><%= item.description %> <%= userId %></h3>
 
-        <h2 class="description">Pagamento processado por <img src="/assets/img/integrations/mercadopago.svg" alt="Mercado Pago"></h2>
+        <h2 class="description">
+            Pagamento processado por 
+            <img src="/assets/img/integrations/mercadopago.svg" alt="Mercado Pago" class="mercadopago-logo">
+        </h2>
 
-        <h4 class="description">Não utilize cartões e contas bancárias de terceiros sem a permissão deles! Usar o
-            dinheiro de outra pessoa sem autorização é fraude!<br><br>Você gostaria que alguém roubasse seu dinheiro?</h4>
+        <section class="terms">
+            <h4>Ao clicar em "Continuar a compra", você concorda que:</h4>
+            <ul>
+                <li>O dinheiro utilizado é seu ou você possui autorização para usá-lo.</li>
+                <li>Não oferecemos reembolso para produtos vendidos, pois se tratam de produtos digitais.</li>
+                <li>Você não está imune a banimentos, nem garantimos a remoção de um banimento.</li>
+                <li>Todos os itens adquiridos não possuem valor monetário. Transações realizadas com terceiros não são de nossa responsabilidade, e você pode ser banido caso se envolva com esse tipo de negociação.</li>
+                <li>O pagamento pelos nossos serviços não garante atendimento exclusivo.</li>
+                <li>Em caso de problemas com o produto, entre em contato com nosso suporte.</li>
+            </ul>
+        </section>
 
         <div class="button-container">
-            <a href="/cancel?id=<%= item.checkoutId %>"><button class="danger">Cancelar compra</button></a>
-            <a href="/checkout/mercadopago?checkoutId=<%= item.checkoutId %>"><button class="success">Continuar a compra</button></a>
+            <a href="/cancel?id=<%= item.checkoutId %>">
+                <button class="danger">Cancelar compra</button>
+            </a>
+            <a href="/checkout/mercadopago?checkoutId=<%= item.checkoutId %>">
+                <button class="success">Continuar a compra</button>
+            </a>
         </div>
 
-        <p>Escolheu o produto errado? Clique em "Cancelar compra" antes de escolher outro produto!</p>
+        <p class="warning">
+            Escolheu o produto errado? Clique em "Cancelar compra" antes de escolher outro produto!
+        </p>
     </main>
 </body>
 
