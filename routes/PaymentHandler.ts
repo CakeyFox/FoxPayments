@@ -91,6 +91,8 @@ router.post("/mercadopago/webhook", async (req, res) => {
                             checkoutInfo.checkoutId
                         );
                     }
+
+                    break;
                 }
 
                 case MercadoPagoStatus.PAYMENT_REFUNDED: {
@@ -99,6 +101,8 @@ router.post("/mercadopago/webhook", async (req, res) => {
                         payment.additional_info.items[0].id,
                         checkoutInfo.checkoutId
                     )
+
+                    break;
                 }
             }
         }
@@ -115,16 +119,6 @@ router.get("/pending", (req, res) => {
 
 router.get("/failure", (req, res) => {
     res.send("Payment failed");
-});
-
-router.get("/cancel", async (req, res) => {
-    try {
-        await database.deleteCheckout(req.query.id as string);
-        res.redirect("https://foxybot.win/");
-    } catch (error) {
-        logger.error("Error cancelling checkout:", error);
-        res.status(500).json({ message: "Internal server error" });
-    }
 });
 
 module.exports = router;
