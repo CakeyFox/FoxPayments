@@ -3,11 +3,10 @@ import mongoose from 'mongoose';
 /* User related schemas */
 const keySchema = new mongoose.Schema({
     key: String,
-    used: Boolean,
-    expiresAt: Date,
-    pType: Number,
-    guild: String,
+    usedBy: String || null,
+    ownedBy: String || null,
 }, { versionKey: false, id: false });
+
 const transactionSchema = new mongoose.Schema({
     to: String,
     from: String,
@@ -18,20 +17,6 @@ const transactionSchema = new mongoose.Schema({
 }, {
     versionKey: false, id: false
 });
-const petSchema = new mongoose.Schema({
-    name: String,
-    type: String,
-    rarity: String,
-    level: Number,
-    hungry: Number,
-    happy: Number,
-    health: Number,
-    lastHungry: Date,
-    lastHappy: Date,
-    isDead: Boolean,
-    isClean: Boolean,
-    food: Array
-}, { versionKey: false, id: false });
 
 const userSchema = new mongoose.Schema({
     _id: String,
@@ -56,28 +41,21 @@ const userSchema = new mongoose.Schema({
         repCount: Number,
         lastRep: Date,
         layout: String,
+        layoutList: Array,
         aboutme: String,
     },
     userPremium: {
         premium: Boolean,
         premiumDate: Date,
-        premiumType: String,
+        premiumType: String
     },
     userSettings: {
         language: String
     },
-    petInfo: petSchema,
     userTransactions: [transactionSchema],
-    riotAccount: {
-        isLinked: Boolean,
-        puuid: String,
-        isPrivate: Boolean,
-        region: String
-    },
-    premiumKeys: [keySchema],
-    roulette: {
-        availableSpins: Number,
-    }
+    lastVote: Date,
+    voteCount: Number,
+    notifiedForVote: Boolean,
 }, { versionKey: false, id: false });
 
 const riotAccountSchema = new mongoose.Schema({
@@ -88,19 +66,38 @@ const riotAccountSchema = new mongoose.Schema({
 /* End of user related schemas */
 
 /* Guild related schemas */
-const keySchemaForGuilds = new mongoose.Schema({
-    key: String,
-    used: Boolean,
-    expiresAt: Date,
-    pType: Number,
-    guild: String,
-    owner: String,
-}, {
-    versionKey: false, id: false
+const dashboardLogsSchema = new mongoose.Schema({
+    authorId: String,
+    actionType: String,
+    date: {
+        type: mongoose.Schema.Types.BigInt,
+        get: (value: BigInt) => Number(value),
+        set: (value: any) => BigInt(value)
+    }
+}, { versionKey: false, id: false, _id: false });
+
+dashboardLogsSchema.set('toJSON', {
+    transform: (doc: any, ret: any) => {
+        if (ret.date && typeof ret.date === 'bigint') {
+            ret.date = Number(ret.date);
+        }
+        return ret;
+    }
 });
+
+const youtubeChannel = new mongoose.Schema({
+    channelId: String,
+    notificationMessage: String || null,
+    channelToSend: String || null
+}, { versionKey: false, id: false })
 
 const guildSchema = new mongoose.Schema({
     _id: String,
+    guildAddedAt: {
+        type: mongoose.Schema.Types.BigInt,
+        get: (value: BigInt) => Number(value),
+        set: (value: any) => BigInt(value)
+    },
     GuildJoinLeaveModule: {
         isEnabled: Boolean,
         joinMessage: String,
@@ -109,47 +106,127 @@ const guildSchema = new mongoose.Schema({
         joinChannel: String,
         leaveChannel: String,
     },
-    valAutoRoleModule: {
+    AutoRoleModule: {
         isEnabled: Boolean,
-        unratedRole: String,
-        ironRole: String,
-        bronzeRole: String,
-        silverRole: String,
-        goldRole: String,
-        platinumRole: String,
-        diamondRole: String,
-        ascendantRole: String,
-        immortalRole: String,
-        radiantRole: String,
+        roles: Array,
     },
-    premiumKeys: [keySchemaForGuilds]
+    premiumKeys: Array,
+    guildSettings: {
+        prefix: String,
+        disabledCommands: Array,
+        blockedChannels: Array,
+        sendMessageIfChannelIsBlocked: Boolean,
+        deleteMessageIfCommandIsExecuted: Boolean,
+        usersWhoCanAccessDashboard: Array,
+    },
+    antiRaidModule: {
+        handleMultipleMessages: Boolean,
+        handleMultipleJoins: Boolean,
+        handleMultipleChars: Boolean,
+        messagesThreshold: {
+            type: mongoose.Schema.Types.Number,
+            default: 8,
+        },
+        newUsersThreshold: {
+            type: mongoose.Schema.Types.Number,
+            default: 5,
+        },
+        repeatedCharsThreshold: {
+            type: mongoose.Schema.Types.Number,
+            default: 10,
+        },
+        warnsThreshold: {
+            type: mongoose.Schema.Types.Number,
+            default: 3,
+        },
+        alertChannel: String || null,
+        actionForMassJoin: String || "NOTHING",
+        actionForMassMessage: String || "TIMEOUT",
+        actionForMassChars: String || "WARN",
+        timeoutDuration: {
+            type: mongoose.Schema.Types.Number,
+            default: 10000,
+        },
+        whitelistedChannels: Array,
+        whitelistedRoles: Array,
+    },
+    followedYouTubeChannels: [youtubeChannel],
+    dashboardLogs: [dashboardLogsSchema],
 }, { versionKey: false, id: false });
 
 /* End of guild related schemas */
 
 /* Bot related schemas */
 
-const subCommandSchema = new mongoose.Schema({
-    name: String,
-    description: String,
-    nameLocalizations: {
-        "pt-BR": String,
+const foxyVerseSchema = new mongoose.Schema({
+    _id: String,
+    serverBenefits: {
+        givePremiumIfBoosted: {
+            isEnabled: Boolean,
+            notifyUser: Boolean,
+            textChannelToRedeem: String,
+        },
     },
-    descriptionLocalizations: {
-        "pt-BR": String,
-    }
+    guildAdmins: Array,
+    serverInvite: String,
+
+}, { versionKey: false, id: false, _id: false });
+
+const commandsSchema = new mongoose.Schema({
+    commandName: String,
+    commandUsageCount: Number,
+    category: String,
+    description: String,
+    isInactive: Boolean,
+    supportsLegacy: Boolean,
+    subcommands: Array,
+    usage: Array
 }, { versionKey: false, id: false });
 
-const subCommandGroupSchema = new mongoose.Schema({
+const itemSchema = new mongoose.Schema({
+    id: String,
+    type: String,
+});
+
+const dailyStoreSchema = new mongoose.Schema({
+    itens: [itemSchema],
+    lastUpdate: Date,
+}, { versionKey: false, id: false });
+
+const backgroundSchema = new mongoose.Schema({
+    id: String,
     name: String,
-    nameLocalizations: {
-        "pt-BR": String,
-    },
+    cakes: Number,
+    filename: String,
     description: String,
-    descriptionLocalizations: {
-        "pt-BR": String,
-    },
-    subcommands: [subCommandSchema],
+    author: String,
+    inactive: Boolean,
+    releaseDate: Date,
+    limitedEdition: Boolean,
+    rarity: String,
+    collection: String,
+}, { versionKey: false, id: false, suppressReservedKeysWarning: true });
+
+const layoutSchema = new mongoose.Schema({
+    id: String,
+    name: String,
+    filename: String,
+    description: String,
+    cakes: Number,
+    inactive: Boolean,
+    author: String,
+    darkText: Boolean,
+}, { versionKey: false, id: false });
+
+const avatarDecorationSchema = new mongoose.Schema({
+    id: String,
+    name: String,
+    cakes: Number,
+    filename: String,
+    description: String,
+    inactive: Boolean,
+    author: String,
+    isMask: Boolean,
 }, { versionKey: false, id: false });
 
 const storeSchema = new mongoose.Schema({
@@ -168,56 +245,6 @@ const checkoutList = new mongoose.Schema({
     date: Date,
     isApproved: Boolean,
     paymentId: String,
-});
-
-const commandsSchema = new mongoose.Schema({
-    commandName: String,
-    commandUsageCount: Number,
-    category: String,
-    description: String,
-    isInactive: Boolean,
-    subcommands: [subCommandSchema],
-    subcommandGroups: [subCommandGroupSchema],
-    usage: Array,
-    nameLocalizations: {
-        "pt-BR": String,
-    },
-    descriptionLocalizations: {
-        "pt-BR": String,
-    },
-}, { versionKey: false, id: false });
-
-
-const backgroundSchema = new mongoose.Schema({
-    id: String,
-    name: String,
-    cakes: Number,
-    filename: String,
-    description: String,
-    author: String,
-    inactive: Boolean,
-}, { versionKey: false, id: false } );
-
-const avatarDecorationSchema = new mongoose.Schema({
-    id: String,
-    name: String,
-    cakes: Number,
-    filename: String,
-    description: String,
-    inactive: Boolean,
-    author: String,
-    isMask: Boolean,
-}, { versionKey: false, id: false });
-
-const layoutsSchema = new mongoose.Schema({
-    id: String,
-    name: String,
-    cakes: Number,
-    filename: String,
-    description: String,
-    inactive: Boolean,
-    author: String,
-    darkText: Boolean,
 }, { versionKey: false, id: false });
 
 const badgesSchema = new mongoose.Schema({
@@ -227,6 +254,7 @@ const badgesSchema = new mongoose.Schema({
     description: String,
     exclusive: Boolean,
     priority: Number,
+    isFromGuild: String,
 });
 
 export const Schemas = {
@@ -236,11 +264,13 @@ export const Schemas = {
     backgroundSchema,
     riotAccountSchema,
     keySchema,
+    layoutSchema,
     avatarDecorationSchema,
-    badgesSchema,
-    layoutsSchema,
     storeSchema,
-    checkoutList
+    checkoutList,
+    dailyStoreSchema,
+    badgesSchema,
+    foxyVerseSchema
 };
 
 /* End of bot related schemas */

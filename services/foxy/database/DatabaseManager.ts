@@ -3,7 +3,6 @@ import { logger } from '../../../utils/logger';
 import { User } from 'discordeno/transformers';
 import { RestManager } from '../RestManager';
 import { Schemas } from './Schemas';
-import { Background, Decoration, Layout } from '../../../utils/types/profile';
 import { Item } from '../../../utils/types/item';
 import { TransactionType } from '../../../utils/types/transactions';
 const { v4: uuidv4 } = require('uuid');
@@ -35,7 +34,6 @@ export default class DatabaseConnection {
         this.riotAccount = mongoose.model('riotAccount', Schemas.riotAccountSchema);
         this.backgrounds = mongoose.model('backgrounds', Schemas.backgroundSchema);
         this.decorations = mongoose.model('decorations', Schemas.avatarDecorationSchema);
-        this.layouts = mongoose.model('layouts', Schemas.layoutsSchema);
         this.items = mongoose.model('storeItems', Schemas.storeSchema);
         this.checkoutList = mongoose.model('checkoutList', Schemas.checkoutList);
     }
@@ -133,7 +131,7 @@ export default class DatabaseConnection {
         let document = await this.checkoutList.findOne({ checkoutId: checkoutId });
         return document;
     }
-    
+
     async getCheckoutByUserId(userId: string): Promise<any> {
         let document = await this.checkoutList.findOne({ userId: userId, isApproved: false });
         return document;
@@ -146,52 +144,40 @@ export default class DatabaseConnection {
         return true;
     }
 
-    async registerKey(user: String, expiresAt: Date, pType: Number): Promise<Key> {
-        const key = uuidv4();
-        const userDocument = await this.getUser(user);
-
-        userDocument.premiumKeys.push({
-            key: key,
-            used: false,
-            expiresAt: expiresAt,
-            pType: pType,
-            guild: null,
-        });
-
-        await userDocument.save();
-        return userDocument.premiumKeys[userDocument.premiumKeys.length - 1];
+    async getKey(key: string): Promise<any> {
+        const document = await this.key.findOne({ key: key });
+        return document;
     }
 
-    async getKey(key: string) {
-        var document = await this.user.findOne({ premiumKeys: { $elemMatch: { key: key } } });
-
-        if (!document) {
-            return null;
-        } else {
-            return document;
-        }
+    async getKeyByUserId(userId: string): Promise<any> {
+        const document = await this.key.findOne({ ownedBy: userId });
+        return document;
     }
 
-    async createKey(userId, pType: string): Promise<void> {
-        const key = uuidv4();
-        const userDocument = await this.getUser(userId);
+    async getKeyByGuildId(guildId: string): Promise<any> {
+        const document = await this.key.findOne({ usedBy: guildId });
+        return document;
+    }
 
-        userDocument.premiumKeys.push({
+    async registerKey(user: string): Promise<Key> {
+        const key = uuidv4();
+        const document = await this.key.findOne({ ownedBy: user });
+        if (document) return document;
+
+        const newKey = new this.key({
             key: key,
-            used: false,
-            expiresAt: new Date(Date.now() + 2592000000),
-            pType: pType,
-            guild: null,
+            ownedBy: user,
+            usedBy: null,
         });
-        await userDocument.save();
-        return key;
+
+        await newKey.save();
+
+        return newKey;
     }
 }
 
 interface Key {
     key: string;
-    used: boolean;
-    expiresAt: Date;
-    pType: number;
-    guild: string;
+    ownedBy: string;
+    usedBy: string | null;
 }

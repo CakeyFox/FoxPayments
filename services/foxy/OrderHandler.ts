@@ -13,12 +13,13 @@ export default class OrderHandler {
     async createSubscriptionOrder(userId: string, itemId: string, checkoutId: string) {
         const itemInfo = await database.getProductFromStore(itemId);
         const userInfo = await database.getUser(userId);
-
+        
         userInfo.userPremium = {
             premium: true,
             premiumDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
             premiumType: itemInfo.itemName,
         };
+        await database.registerKey(userId)
         await userInfo.save();
 
         this.sendMessage(this.createEmbed(itemInfo.itemName, checkoutId), userId);
