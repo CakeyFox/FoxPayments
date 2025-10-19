@@ -1,6 +1,7 @@
 plugins {
     kotlin("jvm") version "2.2.20"
     kotlin("plugin.serialization") version "2.2.20"
+    id("com.github.johnrengelman.shadow") version "7.0.0"
 }
 
 group = "net.cakeyfox"
@@ -38,6 +39,18 @@ dependencies {
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-hocon:1.8.1")
     implementation("io.github.microutils:kotlin-logging:2.1.23")
     implementation("com.google.guava:guava:33.5.0-jre")
+}
+
+tasks {
+    shadowJar {
+        archiveBaseName.set("FoxPayments")
+        archiveVersion.set(version.toString())
+        archiveClassifier.set("")
+
+        manifest {
+            attributes["Main-Class"] = "net.cakeyfox.foxpayments.FoxPaymentsLauncher"
+        }
+    }
 }
 
 tasks.test {
