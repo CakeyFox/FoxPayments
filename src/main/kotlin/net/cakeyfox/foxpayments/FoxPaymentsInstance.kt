@@ -29,7 +29,7 @@ import net.cakeyfox.foxpayments.utils.integrations.mercadopago.MercadoPagoClient
 import net.cakeyfox.foxy.database.core.DatabaseClient
 import java.util.concurrent.TimeUnit
 
-class FoxPaymentsInstance(config: FoxPaymentsSettings) {
+class FoxPaymentsInstance(val config: FoxPaymentsSettings) {
     private val logger = KotlinLogging.logger { }
     private val server = embeddedServer(Netty, config.server.port) {
         install(ContentNegotiation) {

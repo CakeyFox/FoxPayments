@@ -34,7 +34,7 @@ class OrderHandler(val client: FoxPaymentsInstance) {
     }
 
     private suspend fun sendSuccessMessage(userId: String, itemName: String?, checkoutId: String) {
-        relayMessageToMasterCluster(userId) {
+        relayMessageToMasterCluster(client.config, userId) {
             embeds = listOf(
                 RelayEmbed(
                     title = "Obrigada por me ajudar a ficar online, yay!",
