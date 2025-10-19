@@ -24,10 +24,14 @@ object FoxyClusterUtils {
         }
     }
 
-    suspend fun relayMessageToMasterCluster(userId: String, message: RelayMessage.() -> Unit) {
+    suspend fun relayMessageToMasterCluster(
+        config: FoxPaymentsSettings,
+        userId: String,
+        message: RelayMessage.() -> Unit
+    ) {
         val msg = RelayMessage().apply(message)
-        client.post("http://localhost:3000/api/v1/users/$userId/send") {
-            header("Authorization", "Bearer senhasupersecreta")
+        client.post("${config.server.foxy.masterClusterUrl}/api/v1/users/$userId/send") {
+            header("Authorization", "Bearer ${config.server.foxy.authorization}")
 
             contentType(ContentType.Application.Json)
 

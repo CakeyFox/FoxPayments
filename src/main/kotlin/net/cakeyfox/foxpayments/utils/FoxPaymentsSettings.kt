@@ -12,7 +12,8 @@ data class FoxPaymentsSettings(
         val authorization: String,
 
         val mercadopago: MercadoPagoConfig,
-        val database: Database
+        val database: Database,
+        val foxy: FoxySettings
     ) {
         @Serializable
         data class MercadoPagoConfig(
@@ -26,6 +27,12 @@ data class FoxPaymentsSettings(
             val user: String,
             val password: String,
             val requestTimeout: Long
+        )
+
+        @Serializable
+        data class FoxySettings(
+            val masterClusterUrl: String,
+            val authorization: String,
         )
     }
 }
