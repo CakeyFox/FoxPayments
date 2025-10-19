@@ -17,8 +17,7 @@ dependencies {
     implementation("com.mercadopago:sdk-java:2.5.0") {
         exclude(group = "com.google.collections", module = "google-collections")
     }
-    implementation("net.cakeyfox.foxy:DatabaseUtils:1.0")
-//    implementation("com.github.CakeyFox:DatabaseUtils:1.2.4")
+    implementation("com.github.CakeyFox:DatabaseUtils:1.2.5")
     implementation("org.jetbrains.kotlinx:kotlinx-datetime:0.3.3")
     implementation("io.ktor:ktor-client-core:3.2.2")
     implementation("io.ktor:ktor-client-cio:3.2.2")
