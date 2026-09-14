@@ -20,7 +20,7 @@ class GetMercadoPagoCheckout {
                     client.database.payment.getProductFromStore(checkoutInfo!!.itemId)
                         ?: return@get call.respond(HttpStatusCode.NotFound)
 
-               val paymentUrl = client.mercadoPagoClient.createPayment(itemInfo, checkoutInfo.userId)
+               val paymentUrl = client.mercadoPagoClient.createPayment(itemInfo, checkoutInfo)
                 call.respondRedirect(paymentUrl!!)
             } catch (_: Exception) {
                 return@get call.respond(HttpStatusCode.InternalServerError)
