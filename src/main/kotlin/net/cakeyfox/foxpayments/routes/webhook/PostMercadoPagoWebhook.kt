@@ -57,7 +57,7 @@ class PostMercadoPagoWebhook {
         payment: Payment,
         itemInfo: StoreItem
     ) {
-        if (checkoutInfo.isApproved) return call.respondText(
+        if (checkoutInfo.isApproved == true) return call.respondText(
             status = HttpStatusCode.Forbidden,
             text = "Payment already approved",
         )
