@@ -5,16 +5,22 @@ import net.cakeyfox.foxpayments.FoxPaymentsInstance
 import net.cakeyfox.foxpayments.utils.FoxyClusterUtils.relayMessageToMasterCluster
 import net.cakeyfox.foxpayments.utils.RelayEmbed
 import net.cakeyfox.foxpayments.utils.RelayEmbedFooter
+import net.cakeyfox.foxy.database.data.checkout.Checkout
 import java.awt.Color
 import kotlin.time.Duration.Companion.days
 
 class OrderHandler(val client: FoxPaymentsInstance) {
-    suspend fun createSubscriptionOrder(userId: String, itemId: String, checkoutId: String, itemName: String) {
+    suspend fun createSubscriptionOrder(userId: String, itemId: String, checkout: Checkout, itemName: String) {
+        val checkoutId = checkout.checkoutId
         val itemInfo = client.database.payment.getProductFromStore(itemId)
 
         client.database.user.updateUser(userId) {
             userPremium.premium = true
-            userPremium.premiumDate = Clock.System.now().plus(30.days)
+            userPremium.premiumDate = if (checkout.isAnnual) {
+                Clock.System.now().plus(365.days)
+            } else {
+                Clock.System.now().plus(30.days)
+            }
             userPremium.premiumType = itemName
         }
 

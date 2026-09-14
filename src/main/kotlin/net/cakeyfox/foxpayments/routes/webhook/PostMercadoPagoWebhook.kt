@@ -72,7 +72,7 @@ class PostMercadoPagoWebhook {
             client.order.createSubscriptionOrder(
                 payment.externalReference,
                 payment.additionalInfo.items[0].id,
-                checkoutInfo.checkoutId,
+                checkoutInfo,
                 itemInfo.itemName
             )
         } else {
