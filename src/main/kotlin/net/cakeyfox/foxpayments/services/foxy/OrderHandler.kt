@@ -16,7 +16,7 @@ class OrderHandler(val client: FoxPaymentsInstance) {
 
         client.database.user.updateUser(userId) {
             userPremium.premium = true
-            userPremium.premiumDate = if (checkout.isAnnual) {
+            userPremium.premiumDate = if (checkout?.isAnnual == true) {
                 Clock.System.now().plus(365.days)
             } else {
                 Clock.System.now().plus(30.days)
