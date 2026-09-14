@@ -10,5 +10,5 @@ WORKDIR /app
 
 COPY build/libs/FoxPayments-*.jar FoxPayments.jar
 
-ENV JAVA_OPTS="-Xms2G -Xmx4G"
+ENV JAVA_OPTS="-Xms1G -Xmx2G"
 ENTRYPOINT ["sh", "-c", "java $JAVA_OPTS -jar FoxPayments.jar"]
