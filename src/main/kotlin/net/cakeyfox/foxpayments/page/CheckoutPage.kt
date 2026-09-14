@@ -49,11 +49,9 @@ fun checkoutPage(checkoutInfo: Checkout, itemInfo: StoreItem): String {
                 }
             }
 
-            val valueToPay = checkoutInfo.valueToPay?.takeIf { it > 0.0 } ?: itemInfo.price
-
             main {
                 h1("title") { +itemInfo.itemName }
-                h3("price") { +"$valueToPay BRL" }
+                h3("price") { +"${checkoutInfo.valueToPay} BRL" }
                 h3("description") { +"${itemInfo.description} ${checkoutInfo.userId}" }
 
                 h2("description") {

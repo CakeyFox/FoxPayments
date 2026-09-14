@@ -20,15 +20,13 @@ class MercadoPagoClient {
 
     fun createPayment(item: StoreItem, checkout: Checkout): String? {
         try {
-            val value = checkout.valueToPay?.takeIf { it > 0.0 } ?: item.price
-
             val item = PreferenceItemRequest.builder()
                 .id(item.itemId)
                 .title(item.itemName)
                 .description("${item.itemName} - ${checkout.userId}")
                 .quantity(1)
                 .currencyId("BRL")
-                .unitPrice(value.toBigDecimal())
+                .unitPrice(checkout.valueToPay?.toBigDecimal())
                 .build()
             val preferenceRequest = PreferenceRequest.builder()
                 .items(listOf(item))
